@@ -1,0 +1,1400 @@
+{
+  "name": "Department Payment Collection Bot (LINE Slip)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "line-slip-payment",
+        "options": {
+          "rawBody": true
+        }
+      },
+      "id": "e576392a-9083-4cf9-ab72-a57add37173a",
+      "name": "LINE Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        512
+      ],
+      "webhookId": "REPLACE_ME"
+    },
+    {
+      "parameters": {
+        "action": "hmac",
+        "binaryData": true,
+        "dataPropertyName": "expectedSignature",
+        "encoding": "base64"
+      },
+      "id": "d1c6ef96-222b-433c-8b68-e3abcb13d05e",
+      "name": "Compute LINE Signature",
+      "type": "n8n-nodes-base.crypto",
+      "typeVersion": 2,
+      "position": [
+        272,
+        816
+      ],
+      "credentials": {
+        "crypto": {
+          "id": "REPLACE_ME",
+          "name": "Crypto account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "combinator": "and",
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.headers[\"x-line-signature\"] }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "leftValue": "={{ $json.headers[\"x-line-signature\"] }}",
+              "rightValue": "={{ $json.expectedSignature }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e5686a82-ded3-43d7-a852-e2a4667daee0",
+      "name": "Signature Valid?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        496,
+        816
+      ]
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "body.events",
+        "options": {}
+      },
+      "id": "b2faf4ff-afba-49c5-a6a9-02b226efe961",
+      "name": "Split LINE Events",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        272,
+        624
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "combinator": "and",
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.type }}",
+              "rightValue": "message",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "leftValue": "={{ $json.replyToken }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "420c473b-818b-4e4c-aca5-36c042d7648d",
+      "name": "Keep User Messages",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        496,
+        624
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "combinator": "and",
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.message.type }}",
+              "rightValue": "image",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "6106a5e9-5717-4826-96ad-dc4d2ac7ae52",
+      "name": "Is Image Message?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        720,
+        624
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://api-data.line.me/v2/bot/message/{{ $json.message.id }}/content",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpTemplatedCustomAuth",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "id": "ee0ea13f-53e2-486a-9965-d7b0d53eb769",
+      "name": "Download Slip Image",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        800,
+        560
+      ],
+      "credentials": {
+        "httpTemplatedCustomAuth": {
+          "id": "REPLACE_ME",
+          "name": "LINE Messaging API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "binaryData": true,
+        "dataPropertyName": "imageSha256"
+      },
+      "id": "a0a9af73-dc59-4bd8-b328-7b1c9f1f82c3",
+      "name": "Compute Image SHA-256",
+      "type": "n8n-nodes-base.crypto",
+      "typeVersion": 2,
+      "position": [
+        1024,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Payment Ledger",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEET_ID/edit"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "_ประวัติรายการ"
+        },
+        "options": {}
+      },
+      "id": "b791de5a-568f-4637-ae4b-6e350a08c66f",
+      "name": "Read Transaction History",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1328,
+        560
+      ],
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_ME",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Compare each downloaded slip's SHA-256 with every hash already logged in _ประวัติรายการ\nconst history = $input.all().map(function (i) { return i.json; });\nconst seen = new Set(history.map(function (r) { return String(r.image_sha256 || '').trim().toLowerCase(); }).filter(Boolean));\n// The file download replaces item JSON, so read the LINE event back from the image-check node by position\nconst events = $('Is Image Message?').all();\n// The hash node does not pass the image file through, so take the file from the download node by position\nconst files = $('Download Slip Image').all();\nreturn $('Compute Image SHA-256').all().map(function (item, idx) {\n  const e = events[idx] ? events[idx].json : {};\n  const hash = String(item.json.imageSha256 || '').toLowerCase();\n  return {\n    json: {\n      status: seen.has(hash) ? 'duplicate_image' : 'new',\n      replyToken: e.replyToken,\n      webhookEventId: e.webhookEventId,\n      messageId: e.message ? e.message.id : '',\n      lineUserId: e.source ? e.source.userId : '',\n      imageSha256: hash,\n    },\n    binary: files[idx] && files[idx].binary ? files[idx].binary : item.binary,\n  };\n});"
+      },
+      "id": "d77412aa-c31d-48ce-852f-07976dbd5f4a",
+      "name": "Check Duplicate Image",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1552,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "combinator": "and",
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "duplicate_image",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "97194005-4e7e-415c-bbf0-f5e7a20c698a",
+      "name": "Is Duplicate Image?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1776,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Compose LINE reply using only the data that reaches this node.\n// Do not reference nodes from another branch.\n\nconst data = $json;\nlet status = data.status;\n\n// If no status exists, identify the simple cases from the current input.\nif (!status) {\n  if (\n    data.message &&\n    data.message.type &&\n    data.message.type !== 'image'\n  ) {\n    status = 'not_image';\n  } else {\n    // A payment confirmation requires explicit success from the recording path.\n    status = 'needs_review';\n  }\n}\n\nconst NL = '\\n';\n\nconst review =\n  'ได้รับสลิปแล้ว แต่ระบบยังไม่สามารถยืนยันรายการได้โดยอัตโนมัติ ' +\n  'ผู้ดูแลจะตรวจสอบและบันทึกให้ภายหลัง';\n\nconst texts = {\n  not_image:\n    'กรุณาส่งรูปภาพสลิปการโอนเงิน เพื่อบันทึกการชำระเงินค่าภาควิชา',\n\n  duplicate_image:\n    'สลิปนี้เคยถูกส่งและบันทึกไปแล้ว ระบบจะไม่บันทึกซ้ำ ' +\n    'หากมีข้อสงสัยกรุณาติดต่อผู้ดูแล',\n\n  duplicate_ref:\n    'เลขที่รายการของสลิปนี้เคยถูกบันทึกไปแล้ว ระบบจะไม่บันทึกซ้ำ ' +\n    'หากมีข้อสงสัยกรุณาติดต่อผู้ดูแล',\n\n  unreadable:\n    'ไม่สามารถอ่านข้อมูลจากสลิปได้ กรุณาส่งรูปสลิปที่ชัดเจนและครบถ้วนอีกครั้ง',\n\n  no_match: review,\n\n  not_in_round: review,\n\n  round_not_found: review,\n\n  amount_mismatch:\n    'ได้รับสลิปแล้ว แต่ยอดเงินในสลิป (' +\n    (data.amount == null ? '-' : data.amount) +\n    ' บาท) ไม่ตรงกับยอดที่ต้องชำระในรอบ ' +\n    (data.roundSheet || '') +\n    ' รายการนี้ต้องให้ผู้ดูแลตรวจสอบ ระบบยังไม่ได้บันทึกว่าชำระแล้ว',\n\n  already_paid:\n    'ระบบพบว่าคุณถูกบันทึกว่าชำระแล้วในรอบ ' +\n    (data.roundSheet || '') +\n    ' ผู้ดูแลจะตรวจสอบสลิปนี้เพิ่มเติม',\n\n  paid: [\n    'บันทึกการชำระเงินค่าภาควิชาเรียบร้อยแล้ว',\n    'ชื่อ: ' + (data.studentName || ''),\n    'รหัสนักศึกษา: ' + (data.studentId || ''),\n    'ยอดเงิน: ' + (data.amount ?? '') + ' บาท',\n    'รอบเก็บเงิน: ' + (data.roundSheet || ''),\n    'เลขที่รายการ: ' + (data.referenceNo || ''),\n  ].join(NL),\n};\n\nreturn {\n  json: {\n    ...data,\n    status,\n    replyToken: data.replyToken,\n    replyText: texts[status] || review,\n  },\n};"
+      },
+      "id": "6cee664b-127c-4c36-9aaf-f16cdeec591a",
+      "name": "Compose Reply Message",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4880,
+        624
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.line.me/v2/bot/message/reply",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpTemplatedCustomAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ replyToken: $json.replyToken, messages: [{ type: \"text\", text: $json.replyText }] }) }}",
+        "options": {}
+      },
+      "id": "355a3111-9f0a-4a63-9397-374de1591787",
+      "name": "LINE Reply",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        5104,
+        624
+      ],
+      "credentials": {
+        "httpTemplatedCustomAuth": {
+          "id": "REPLACE_ME",
+          "name": "LINE Messaging API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini",
+          "cachedResultName": "GPT-5-MINI"
+        },
+        "text": "You read Thai bank transfer slips (e.g. K PLUS, SCB EASY, Krungthai NEXT, Bangkok Bank, Krungsri, ttb, GSB, PromptPay). Look at the image and reply with ONLY a JSON object, no markdown, using exactly these keys: {\"is_slip\": boolean (true only if this is a bank transfer slip/receipt), \"payer_name\": string (sender / from name exactly as printed, keep Thai script and title), \"receiver_name\": string, \"amount\": number (transferred amount in THB, no commas, no currency), \"reference_no\": string (transaction / reference number, e.g. เลขที่รายการ or รหัสอ้างอิง, copy exactly), \"transaction_datetime\": string (ISO 8601 like 2025-07-18T14:05:00+07:00; convert Buddhist year to Gregorian: 2568 or 68 means 2025; Thai month abbreviations ม.ค.=01 ... ธ.ค.=12), \"bank\": string, \"confidence\": number between 0 and 1}. Use an empty string or null for any value you cannot read. Never guess numbers.",
+        "inputType": "base64",
+        "simplify": false,
+        "options": {
+          "detail": "high",
+          "maxTokens": 4000
+        }
+      },
+      "id": "b094a67f-36d8-4416-9153-5ad1109cbf7f",
+      "name": "Read Bank Slip (AI OCR)",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        1856,
+        480
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": null,
+          "name": "Gateway credits",
+          "__aiGatewayManaged": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const j = $json;\nconst context = $('Check Duplicate Image').item.json;\nconst message = Array.isArray(j.output) ? j.output.find(x => x && x.type === 'message') : null;\nconst content = message && Array.isArray(message.content) ? message.content.find(x => x && x.type === 'output_text') : null;\nlet raw = content?.text || '';\nif (typeof raw !== 'string') raw = JSON.stringify(raw);\nraw = raw.replace(/```json/gi, '').replace(/```/g, '').trim();\nlet parsed;\ntry { parsed = JSON.parse(raw); } catch (error) {\n  return { json: { ...context, status: 'unreadable', is_slip: false, readable: false, parse_error: true, raw_ai_output: raw } };\n}\nconst amount = parsed.amount != null ? Number(parsed.amount) : null;\nconst readable = parsed.is_slip === true && Number.isFinite(amount) && amount > 0 && !!parsed.payer_name && !!parsed.reference_no && !!parsed.transaction_datetime;\nreturn { json: {\n  ...context,\n  status: readable ? 'ok' : 'unreadable',\n  is_slip: parsed.is_slip === true, readable,\n  payer_name: parsed.payer_name || null,\n  receiver_name: parsed.receiver_name || null, amount,\n  reference_no: parsed.reference_no || null,\n  transaction_datetime: parsed.transaction_datetime || null,\n  payerName: parsed.payer_name || '',\n  receiverName: parsed.receiver_name || '',\n  referenceNo: parsed.reference_no || '',\n  transactionDateTime: parsed.transaction_datetime || '',\n  bank: parsed.bank || null,\n  confidence: parsed.confidence != null ? Number(parsed.confidence) : null\n} };"
+      },
+      "id": "ea7f98bf-9ec2-4148-855e-f3c7f11b849e",
+      "name": "Parse Slip Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2080,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.status }}",
+                    "rightValue": "ok",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "5648c573-c932-4e20-a3ae-ba34930e2bb3"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Readable & new"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra",
+          "renameFallbackOutput": "Unreadable or duplicate"
+        }
+      },
+      "id": "5c175d70-c57b-42e7-95a2-8d3e591ba15f",
+      "name": "Route Slip Result",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        2304,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Payment Ledger",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEET_ID/edit"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "รายชื่อ"
+        },
+        "options": {}
+      },
+      "id": "30da51e9-f48c-42d4-a3e1-a7c677123fae",
+      "name": "Read Student List",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2800,
+        320
+      ],
+      "executeOnce": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_ME",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Match the slip payer name against the รายชื่อ sheet. Only a single confident match is accepted.\nconst roster = $input.all().map(function (i) { return i.json; }).filter(function (r) { return Object.keys(r).length > 0; });\nconst slips = $('Parse Slip Data').all().map(function (i) { return i.json; }).filter(function (j) { return j.status === 'ok'; });\n\nconst keys = roster.length ? Object.keys(roster[0]) : [];\nconst idKey = keys.find(function (k) { return /รหัส|รหัศ|student.?id|^id$/i.test(k); });\nconst engKey = keys.find(function (k) { return /eng|อังกฤษ|name_en/i.test(k); });\nconst surnameKey = keys.find(function (k) { return /^(นามสกุล|surname|last.?name)$/i.test(k.trim()); });\nconst nameKey = keys.find(function (k) { return /ชื่อ|name/i.test(k) && k !== engKey && k !== surnameKey; });\n\nconst TITLE = /^(นางสาว|นาง|นาย|น\\.ส\\.?|นส\\.?|ด\\.ช\\.?|ด\\.ญ\\.?|mrs\\.?|mr\\.?|ms\\.?|miss)\\s*/i;\nfunction norm(s) {\n  return String(s || '').toLowerCase().replace(/[.,()]/g, ' ').replace(/[*＊•·●○]+$/g, '').replace(/\\s+/g, ' ').trim();\n}\nfunction parts(s) {\n  let n = norm(s);\n  n = n.replace(TITLE, '').trim();\n  const p = n.split(' ').filter(Boolean);\n  return { first: p[0] || '', last: p.slice(1).join(''), full: p.join('') };\n}\n\nconst students = roster.map(function (r) {\n  const th = surnameKey && nameKey ? String(r[nameKey] || '') + ' ' + String(r[surnameKey] || '') : String(r[nameKey] || '');\n  return { id: String(r[idKey] || '').trim(), name: th.trim(), names: [parts(th)].concat(engKey ? [parts(r[engKey])] : []) };\n}).filter(function (s) { return s.id && s.name; });\n\nreturn slips.map(function (slip) {\n  const p = parts(slip.payerName);\n  const exact = [];\n  const partial = [];\n  for (const s of students) {\n    let lvl = 0;\n    for (const n of s.names) {\n      if (!n.first) continue;\n      if (p.full && n.full === p.full) lvl = Math.max(lvl, 2);\n      else if (p.first === n.first && p.last && n.last.indexOf(p.last) === 0) lvl = Math.max(lvl, 1);\n    }\n    if (lvl === 2) exact.push(s);\n    else if (lvl === 1) partial.push(s);\n  }\n  let match = null;\n  let method = '';\n  if (exact.length === 1) { match = exact[0]; method = 'exact_name'; }\n  else if (exact.length === 0 && partial.length === 1) { match = partial[0]; method = 'first_name_and_surname_prefix'; }\n  const candidates = exact.concat(partial).map(function (s) { return s.id + ' ' + s.name; }).join(', ');\n  return {\n    json: Object.assign({}, slip, {\n      status: match ? 'matched' : 'no_match',\n      studentId: match ? match.id : '',\n      studentName: match ? match.name : '',\n      matchMethod: method,\n      reviewReason: match ? '' : (candidates ? 'Multiple possible students: ' + candidates : 'No student name matched the payer name'),\n      candidates: candidates,\n    }),\n  };\n});"
+      },
+      "id": "2f2d1662-8bee-4359-8e07-073e1185dedc",
+      "name": "Match Student",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3024,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "matched",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              },
+              "id": "21fbe315-2d05-4b47-8815-4930c055ea01"
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "b887e2c6-32cb-4bf4-b38a-11b17c7653af",
+      "name": "Student Matched?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        3248,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Round sheets are named dd/mm/yy (Gregorian, 2-digit year). Build the sheet name from the slip's transfer date,\n// e.g. a transfer on 2025-03-03 -> sheet \"03/03/25\". If that sheet does not exist, the slip goes to manual review.\nconst m = $json;\nconst zone = 'Asia/Bangkok';\nlet txn = m.transactionDateTime ? DateTime.fromISO(String(m.transactionDateTime), { zone: zone }) : null;\nif (txn && txn.isValid && txn.year > 2400) txn = txn.minus({ years: 543 });\nconst valid = !!(txn && txn.isValid);\nreturn {\n  json: Object.assign({}, m, {\n    roundSheet: valid ? txn.toFormat('dd/MM/yy') : '',\n    paidAt: valid ? txn.toFormat('yyyy-MM-dd HH:mm:ss') : '',\n  }),\n};"
+      },
+      "id": "802d8aaa-7280-4871-b1a0-e30806e20287",
+      "name": "Choose Payment Round",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3552,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Payment Ledger",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEET_ID/edit"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "={{ $json.roundSheet }}"
+        },
+        "options": {}
+      },
+      "id": "e30a7901-e7c8-45d9-905d-814e2864eafd",
+      "name": "Read Round Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3776,
+        320
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_ME",
+          "name": "Google Sheets account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Make sure the matched student has a row in the chosen round sheet and is not already marked paid.\nconst ID_COL = 'รหัสนักศึกษา';\nconst STATUS_COL = 'สถานะ';\nconst PAID = 'ชำระแล้ว';\nconst DUE_COL = 'ยอดที่ต้องจ่าย (บาท)';\nconst toNum = function (v) { const s = String(v == null ? '' : v).replace(/[^0-9.]/g, ''); return s === '' ? null : Number(s); };\nconst rows = $input.all().map(function (i) { return i.json; }).filter(function (r) { return Object.keys(r).length > 0; });\nconst sheetMissing = rows.some(function (r) { return r.error; }) && !rows.some(function (r) { return r[ID_COL] != null; });\nreturn $('Choose Payment Round').all().map(function (i) {\n  const r = i.json;\n  const row = rows.find(function (x) { return String(x[ID_COL] == null ? '' : x[ID_COL]).trim() === String(r.studentId).trim(); });\n  let status = 'ready';\n  let reason = '';\n  if (!r.roundSheet) { status = 'round_not_found'; reason = 'Could not read a transfer date from the slip, so no payment round could be selected'; }\n  else if (sheetMissing) { status = 'round_not_found'; reason = 'No payment round sheet named ' + r.roundSheet + ' (from the slip transfer date)'; }\n  else if (!row) { status = 'not_in_round'; reason = 'Student ' + r.studentId + ' not found in round sheet ' + r.roundSheet; }\n  else if (String(row[STATUS_COL] || '').trim() === PAID) { status = 'already_paid'; reason = 'Student already marked paid in round ' + r.roundSheet; }\n  else {\n    // Only auto-confirm when the slip amount equals the amount due for this student in this round\n    const due = toNum(row[DUE_COL]);\n    const paid = toNum(r.amount);\n    if (due === null) { status = 'amount_mismatch'; reason = 'Amount mismatch: ' + DUE_COL + ' is blank for student ' + r.studentId + ' in round ' + r.roundSheet + '; slip amount ' + paid; }\n    else if (paid === null || Math.abs(paid - due) > 0.005) { status = 'amount_mismatch'; reason = 'Amount mismatch: slip amount ' + paid + ' does not equal amount due ' + due + ' in round ' + r.roundSheet; }\n  }\n  return { json: Object.assign({}, r, { status: status, reviewReason: reason }) };\n});"
+      },
+      "id": "17a74ec4-11c6-4d7c-a360-94c8d414ab06",
+      "name": "Confirm Round Record",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4000,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "ready",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              },
+              "id": "1f0e7dcf-bc54-4dd8-86bf-7bccbe50e9bb"
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "6bd09a2c-e6c4-41f4-8202-ed08a902f24a",
+      "name": "Ready To Record?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        4224,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Payment Ledger",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEET_ID/edit"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "={{ $json.roundSheet }}"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "matchingColumns": [
+            "รหัสนักศึกษา"
+          ],
+          "value": {
+            "รหัสนักศึกษา": "={{ $json.studentId }}",
+            "ยอดเงิน (บาท)": "={{ $json.amount }}",
+            "สถานะ": "ชำระแล้ว",
+            "เวลาที่จ่าย": "={{ $json.paidAt }}",
+            "หมายเหตุ": "=Ref: {{ $json.referenceNo }}"
+          },
+          "schema": [
+            {
+              "id": "รหัสนักศึกษา",
+              "displayName": "รหัสนักศึกษา",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ยอดเงิน (บาท)",
+              "displayName": "ยอดเงิน (บาท)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "สถานะ",
+              "displayName": "สถานะ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "เวลาที่จ่าย",
+              "displayName": "เวลาที่จ่าย",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "หมายเหตุ",
+              "displayName": "หมายเหตุ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "4baeb53e-4775-49df-b7a3-e50a99043530",
+      "name": "Update Payment Status",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3856,
+        656
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_ME",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Payment Ledger",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEET_ID/edit"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "_ประวัติรายการ"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "timestamp": "={{ $now.setZone(\"Asia/Bangkok\").toFormat(\"yyyy-MM-dd HH:mm:ss\") }}",
+            "line_webhook_event_id": "={{ $(\"Confirm Round Record\").item.json.webhookEventId }}",
+            "line_message_id": "={{ $(\"Confirm Round Record\").item.json.messageId }}",
+            "image_sha256": "={{ $(\"Confirm Round Record\").item.json.imageSha256 }}",
+            "student_id": "={{ $(\"Confirm Round Record\").item.json.studentId }}",
+            "payer_name": "={{ $(\"Confirm Round Record\").item.json.payerName }}",
+            "amount": "={{ $(\"Confirm Round Record\").item.json.amount }}",
+            "payment_round": "={{ $(\"Confirm Round Record\").item.json.roundSheet }}",
+            "reference_no": "={{ $(\"Confirm Round Record\").item.json.referenceNo }}"
+          },
+          "schema": [
+            {
+              "id": "timestamp",
+              "displayName": "timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "line_webhook_event_id",
+              "displayName": "line_webhook_event_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "line_message_id",
+              "displayName": "line_message_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "image_sha256",
+              "displayName": "image_sha256",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "student_id",
+              "displayName": "student_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "payer_name",
+              "displayName": "payer_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "amount",
+              "displayName": "amount",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "payment_round",
+              "displayName": "payment_round",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "reference_no",
+              "displayName": "reference_no",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "0e0f7a7d-f7c9-42a7-ace7-f686dcb41d37",
+      "name": "Log Transaction",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        4080,
+        656
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_ME",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Payment Ledger",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEET_ID/edit"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "_รอตรวจสอบ"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "timestamp": "={{ $now.setZone(\"Asia/Bangkok\").toFormat(\"yyyy-MM-dd HH:mm:ss\") }}",
+            "reason": "={{ $json.reviewReason }}",
+            "line_webhook_event_id": "={{ $json.webhookEventId }}",
+            "line_message_id": "={{ $json.messageId }}",
+            "line_user_id": "={{ $json.lineUserId }}",
+            "image_sha256": "={{ $json.imageSha256 }}",
+            "payer_name": "={{ $json.payerName }}",
+            "amount": "={{ $json.amount }}",
+            "reference_no": "={{ $json.referenceNo }}",
+            "transaction_datetime": "={{ $json.transactionDateTime }}",
+            "candidate_students": "={{ $json.candidates || $json.studentId }}"
+          },
+          "schema": [
+            {
+              "id": "timestamp",
+              "displayName": "timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "reason",
+              "displayName": "reason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "line_webhook_event_id",
+              "displayName": "line_webhook_event_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "line_message_id",
+              "displayName": "line_message_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "line_user_id",
+              "displayName": "line_user_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "image_sha256",
+              "displayName": "image_sha256",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "payer_name",
+              "displayName": "payer_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "amount",
+              "displayName": "amount",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "reference_no",
+              "displayName": "reference_no",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "transaction_datetime",
+              "displayName": "transaction_datetime",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "candidate_students",
+              "displayName": "candidate_students",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "2d8cebbf-e355-4918-a355-2aea39d025f3",
+      "name": "Flag For Manual Review",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3552,
+        0
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_ME",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "e3a9ce02-397b-40da-94d1-53c521109f3c",
+      "name": "Reject Invalid Signature",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        720,
+        816
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.all().map((item, index) => {\n  if (item.json.error) throw new Error('Payment recording did not complete');\n  const data = $('Ready To Record?').itemMatching(index).json;\n  if (data.status !== 'ready' || !data.replyToken) throw new Error('Missing ready payment context or replyToken');\n  return { json: { ...data, status: 'paid' }, pairedItem: { item: index } };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2448,
+        624
+      ],
+      "id": "4ff5a6fb-8e64-411a-98f7-63291420b986",
+      "name": "Restore Payment Reply Context"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "LINE Webhook": {
+      "main": [
+        [
+          {
+            "node": "Compute LINE Signature",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compute LINE Signature": {
+      "main": [
+        [
+          {
+            "node": "Signature Valid?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Signature Valid?": {
+      "main": [
+        [
+          {
+            "node": "Split LINE Events",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reject Invalid Signature",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split LINE Events": {
+      "main": [
+        [
+          {
+            "node": "Keep User Messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Keep User Messages": {
+      "main": [
+        [
+          {
+            "node": "Is Image Message?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Image Message?": {
+      "main": [
+        [
+          {
+            "node": "Download Slip Image",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Compose Reply Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Slip Image": {
+      "main": [
+        [
+          {
+            "node": "Compute Image SHA-256",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compute Image SHA-256": {
+      "main": [
+        [
+          {
+            "node": "Read Transaction History",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Transaction History": {
+      "main": [
+        [
+          {
+            "node": "Check Duplicate Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Duplicate Image": {
+      "main": [
+        [
+          {
+            "node": "Is Duplicate Image?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Duplicate Image?": {
+      "main": [
+        [
+          {
+            "node": "Compose Reply Message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Read Bank Slip (AI OCR)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compose Reply Message": {
+      "main": [
+        [
+          {
+            "node": "LINE Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Bank Slip (AI OCR)": {
+      "main": [
+        [
+          {
+            "node": "Parse Slip Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Slip Data": {
+      "main": [
+        [
+          {
+            "node": "Route Slip Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route Slip Result": {
+      "main": [
+        [
+          {
+            "node": "Read Student List",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Compose Reply Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Student List": {
+      "main": [
+        [
+          {
+            "node": "Match Student",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Match Student": {
+      "main": [
+        [
+          {
+            "node": "Student Matched?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Student Matched?": {
+      "main": [
+        [
+          {
+            "node": "Choose Payment Round",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Flag For Manual Review",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Compose Reply Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Choose Payment Round": {
+      "main": [
+        [
+          {
+            "node": "Read Round Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Round Sheet": {
+      "main": [
+        [
+          {
+            "node": "Confirm Round Record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Confirm Round Record": {
+      "main": [
+        [
+          {
+            "node": "Ready To Record?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ready To Record?": {
+      "main": [
+        [
+          {
+            "node": "Update Payment Status",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Flag For Manual Review",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Compose Reply Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Payment Status": {
+      "main": [
+        [
+          {
+            "node": "Log Transaction",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Transaction": {
+      "main": [
+        [
+          {
+            "node": "Restore Payment Reply Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Restore Payment Reply Context": {
+      "main": [
+        [
+          {
+            "node": "Compose Reply Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true
+  },
+  "nodeGroups": [
+    {
+      "id": "50f7bdb9-130d-4888-a36a-755fc9580d4c",
+      "name": "Validate Slip",
+      "nodeIds": [
+        "d1c6ef96-222b-433c-8b68-e3abcb13d05e",
+        "e5686a82-ded3-43d7-a852-e2a4667daee0",
+        "e3a9ce02-397b-40da-94d1-53c521109f3c",
+        "b2faf4ff-afba-49c5-a6a9-02b226efe961",
+        "420c473b-818b-4e4c-aca5-36c042d7648d",
+        "6106a5e9-5717-4826-96ad-dc4d2ac7ae52"
+      ],
+      "description": "Rejects requests without a valid LINE signature, then keeps user messages and checks that the student sent an image"
+    },
+    {
+      "id": "3e4211b5-29cf-4d68-a5fc-cee65c19b69f",
+      "name": "Download Image",
+      "nodeIds": [
+        "ee0ea13f-53e2-486a-9965-d7b0d53eb769",
+        "a0a9af73-dc59-4bd8-b328-7b1c9f1f82c3"
+      ],
+      "description": "Fetches the slip image from LINE by message ID and fingerprints it with a SHA-256 hash"
+    },
+    {
+      "id": "3712a7de-11e6-4c2e-8880-015dca579b60",
+      "name": "Duplicate Check",
+      "nodeIds": [
+        "b791de5a-568f-4637-ae4b-6e350a08c66f",
+        "d77412aa-c31d-48ce-852f-07976dbd5f4a",
+        "97194005-4e7e-415c-bbf0-f5e7a20c698a"
+      ],
+      "description": "Stops slips whose image hash already appears in the transaction history"
+    },
+    {
+      "id": "972c9e3d-bf1f-4357-8c7b-07f0b92df197",
+      "name": "Match Student",
+      "nodeIds": [
+        "30da51e9-f48c-42d4-a3e1-a7c677123fae",
+        "2f2d1662-8bee-4359-8e07-073e1185dedc",
+        "b887e2c6-32cb-4bf4-b38a-11b17c7653af"
+      ],
+      "description": "Compares the payer name with the student master list; uncertain matches go to manual review"
+    },
+    {
+      "id": "56beb979-f2d1-43ef-82af-b60e99ff5671",
+      "name": "Identify Payment Round",
+      "nodeIds": [
+        "802d8aaa-7280-4871-b1a0-e30806e20287",
+        "e30a7901-e7c8-45d9-905d-814e2864eafd",
+        "17a74ec4-11c6-4d7c-a360-94c8d414ab06",
+        "6bd09a2c-e6c4-41f4-8202-ed08a902f24a"
+      ],
+      "description": "Picks the round sheet named after the transfer date and confirms the student is listed there and not yet paid"
+    },
+    {
+      "id": "46e7a689-9cb2-4945-8f81-62ca72dbfe9c",
+      "name": "Record Payment",
+      "nodeIds": [
+        "4baeb53e-4775-49df-b7a3-e50a99043530",
+        "0e0f7a7d-f7c9-42a7-ace7-f686dcb41d37"
+      ],
+      "description": "Marks the student paid in the round sheet, then appends the slip to the transaction history"
+    },
+    {
+      "id": "9dc65dfd-29c4-40ba-9233-4cfc4914815a",
+      "name": "LINE Reply",
+      "nodeIds": [
+        "6cee664b-127c-4c36-9aaf-f16cdeec591a",
+        "355a3111-9f0a-4a63-9397-374de1591787"
+      ],
+      "description": "Builds the Thai confirmation or problem message and replies to the student in LINE"
+    }
+  ],
+  "tags": []
+}
