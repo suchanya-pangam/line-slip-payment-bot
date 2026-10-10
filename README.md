@@ -1,58 +1,62 @@
 # Department Payment Collection Bot (LINE Slip Automation)
 
-An n8n workflow that automates department fee collection. Students send a bank transfer slip to a LINE Official Account; the bot reads the slip with an AI vision model, matches the payer to the student roster, verifies the amount, records the payment in Google Sheets, and replies to the student in LINE.
+An n8n workflow that automates department fee tracking through LINE. It reads payment slips with AI vision, matches payer names to a student roster, checks the payment round and amount, records payments in Google Sheets, and replies in Thai.
+
+![Workflow overview](assets/workflow-overview.png)
 
 I built this as the department **treasurer** to replace manual slip checking, where each slip had to be opened, read, matched to a student, and recorded by hand.
 
-![Workflow overview](assets/workflow-canvas.png)
-
 ## Problem
 
-Collecting department fees through bank transfer meant:
-
-- Opening every slip sent in chat and reading the name, amount, and date by hand
-- Finding the matching student in the roster and updating a spreadsheet
-- Catching mistakes such as the same slip being sent twice or a wrong amount
-- Replying to each student to confirm the payment
+Collecting department fees through bank transfer meant reading slips in chat, matching names to the roster, updating a spreadsheet, checking repeated submissions, and replying to each student. I connected these steps into one workflow, with a review queue for cases that need an organiser's decision.
 
 ## How It Works
 
 | Step | What happens | n8n nodes |
 |---|---|---|
-| 1. Receive | LINE sends a webhook; the request signature is verified (HMAC) so only genuine LINE requests are processed | Webhook, Crypto, IF |
-| 2. Filter | Keeps user messages and checks that an image was sent | Split Out, Filter, IF |
-| 3. Fingerprint | Downloads the slip image and hashes it (SHA-256) | HTTP Request, Crypto |
-| 4. Duplicate check | Rejects slips whose hash is already in the transaction history | Google Sheets, Code, IF |
-| 5. Read slip | An AI vision model (GPT) extracts payer name, amount, reference number, and date from Thai bank slips, returning structured JSON | OpenAI, Code, Switch |
-| 6. Match student | Compares the payer name with the roster; only one confident match is accepted | Google Sheets, Code, IF |
-| 7. Verify | Finds the payment round from the transfer date and checks the student is listed, unpaid, and paid the exact amount due | Code, Google Sheets, IF |
-| 8. Record | Marks the student as paid and appends the slip to the transaction history | Google Sheets |
-| 9. Review | Uncertain cases (no match, wrong amount, unreadable slip) go to a manual review sheet with the reason | Google Sheets |
-| 10. Reply | Sends a Thai confirmation or problem message back to the student in LINE | Code, HTTP Request |
+| 1. Receive | Compares the LINE request signature with a computed HMAC | Webhook, Crypto, IF |
+| 2. Filter | Keeps message events and asks for a slip if the message is not an image | Split Out, Filter, IF |
+| 3. Fingerprint | Downloads the image and computes its hash | HTTP Request, Crypto |
+| 4. Duplicate check | Checks the image hash against transaction history | Google Sheets, Code, IF |
+| 5. Read slip | Extracts slip fields and checks the required values | OpenAI, Code, Switch |
+| 6. Match student | Accepts one exact name match or one first-name and surname-prefix match | Google Sheets, Code, IF |
+| 7. Check round | Uses the transfer date to select a round; checks the unpaid student row and amount due | Code, Google Sheets, IF |
+| 8. Record | Updates the payment row and appends transaction history | Google Sheets, Code |
+| 9. Review | Queues unmatched students and failed round checks; asks for a new image when a slip is unreadable | Google Sheets, Code |
+| 10. Reply | Sends a confirmation, retry request, or review message in Thai | Code, HTTP Request |
+
+## Workflow Screenshots
+
+![n8n workflow canvas](assets/workflow-canvas.png)
+
+[Complete workflow map — SVG](assets/workflow-complete.svg) · [PNG](assets/workflow-complete.png)
 
 ## Design Decisions
 
-- **Never guess.** The AI prompt forbids guessing numbers, and the workflow only auto-confirms when the name match is unique and the amount is exact. Everything else goes to a human.
-- **Duplicate protection.** Image hashing stops the same slip from being recorded twice.
-- **Verified webhooks.** LINE signature validation blocks forged requests.
-- **Audit trail.** Every recorded payment and every review case is logged with a timestamp and LINE message ID.
+- **Extracts structured fields:** the AI prompt requests JSON and instructs the model to leave unreadable values blank; the parser checks required fields.
+- **Matches one student:** a unique name match proceeds, while ambiguous matches go to manual review.
+- **Checks duplicate images:** image hashes are compared with the transaction history before slip reading.
+- **Checks request signatures:** the HMAC comparison runs before event processing.
+- **Keeps an audit trail:** payment and review records include timestamps and LINE message identifiers.
 
 ## Tech Stack
 
-n8n · LINE Messaging API · OpenAI API (GPT vision) · Google Sheets · JavaScript (n8n Code nodes)
+n8n · LINE Messaging API · OpenAI vision model · Google Sheets · JavaScript
 
 ## Setup
 
-1. Import `workflow/payment-collection-bot.json` into n8n (**Workflows → Import from File**).
-2. Create these credentials in n8n and attach them to the matching nodes:
-   - **LINE Messaging API**: a header auth with your channel access token (`Authorization: Bearer <token>`)
-   - **Crypto**: your LINE channel secret, used for HMAC signature checking
-   - **OpenAI**
-   - **Google Sheets** (OAuth2)
-3. Create a Google Sheet with the structure in [`docs/sheet-structure.md`](docs/sheet-structure.md) and replace every `YOUR_GOOGLE_SHEET_ID` in the workflow with its ID.
-4. Copy the production webhook URL from the **LINE Webhook** node into the LINE Developers Console and enable webhooks.
-5. Activate the workflow and send a test slip to the LINE Official Account.
+1. Import [`workflow/payment-collection-bot.json`](workflow/payment-collection-bot.json) into n8n.
+2. Connect LINE HTTP credentials, the LINE Channel Secret for Crypto, an OpenAI model credential, and Google Sheets OAuth2 credentials.
+3. Create the tabs and columns in [`docs/sheet-structure.md`](docs/sheet-structure.md), then replace `YOUR_GOOGLE_SHEET_ID` in the Sheets nodes.
+4. Check the raw-body signature calculation and configure the webhook in LINE Developers Console.
+5. Follow the [validation checklist](docs/validation-checklist.md) with a separate test ledger before activation.
 
 ## Privacy Note
 
-The real ledger contains student names, IDs, and payment records, so it is not included. The workflow file in this repository has all sheet IDs and credentials removed.
+Student records and real payment slips are excluded. The workflow uses placeholder Sheet IDs and credential references. Slip images go to the configured AI service, and payment details are stored in Google Sheets; manage access and retention for your own environment.
+
+## Limitations
+
+- Reads data from the slip image only; it does not verify the transfer with the bank.
+- Image-hash duplicate detection does not catch edited or re-exported slips.
+- Built and tested as a prototype; live end-to-end testing with LINE, OpenAI and Google Sheets requires your own credentials.

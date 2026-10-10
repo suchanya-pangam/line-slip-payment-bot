@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1530" height="2700" viewBox="0 0 1530 2700"><rect width="100%" height="100%" fill="white"/><defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#475569"/></marker></defs>
+<polyline points="330,115 330,150" fill="none" stroke="#475569" stroke-width="3" marker-end="url(#a)"/>
+<polyline points="330,225 330,260" fill="none" stroke="#475569" stroke-width="3" marker-end="url(#a)"/>
+<polyline points="330,335 330,370" fill="none" stroke="#475569" stroke-width="3" marker-end="url(#a)"/>
+<polyline points="580,298 710,298 710,298 920,298" fill="none" stroke="#475569" stroke-width="3" stroke-dasharray="9 9" marker-end="url(#a)"/>
+<polyline points="330,445 330,480" fill="none" stroke="#475569" stroke-width="3" marker-end="url(#a)"/>
+<polyline points="330,555 330,590" fill="none" stroke="#475569" stroke-width="3" marker-end="url(#a)"/>
+<polyline points="330,665 330,700" fill="none" stroke="#475569" stroke-width="3" marker-end="url(#a)"/>
+<polyline points="580,628 785,628 785,2388 920,2388" fill="none" stroke="#475569" stroke-width="3" stroke-dasharray="9 9" marker-end="url(#a)"/>
+<polyline points="330,775 330,810" fill="none" stroke="#475569" stroke-width="3" marker-end="url(#a)"/>
+<polyline points="330,885 330,920" fill="none" stroke="#475569" stroke-width="3" marker-end="url(#a)"/>
+<polyline points="330,995 330,1030" fill="none" stroke="#475569" stroke-width="3" marker-end="url(#a)"/>
+<polyline points="330,1105 330,1140" fill="none" stroke="#475569" stroke-width="3" marker-end="url(#a)"/>
+<polyline points="580,1178 735,1178 735,2388 920,2388" fill="none" stroke="#475569" stroke-width="3" stroke-dasharray="9 9" marker-end="url(#a)"/>
+<polyline points="330,1215 330,1250" fill="none" stroke="#475569" stroke-width="3" marker-end="url(#a)"/>
+<polyline points="1170,2425 1170,2505" fill="none" stroke="#475569" stroke-width="3" marker-end="url(#a)"/>
+<polyline points="330,1325 330,1360" fill="none" stroke="#475569" stroke-width="3" marker-end="url(#a)"/>
+<polyline points="330,1435 330,1470" fill="none" stroke="#475569" stroke-width="3" marker-end="url(#a)"/>
+<polyline points="330,1545 330,1580" fill="none" stroke="#475569" stroke-width="3" marker-end="url(#a)"/>
+<polyline points="580,1508 810,1508 810,2388 920,2388" fill="none" stroke="#475569" stroke-width="3" stroke-dasharray="9 9" marker-end="url(#a)"/>
+<polyline points="330,1655 330,1690" fill="none" stroke="#475569" stroke-width="3" marker-end="url(#a)"/>
+<polyline points="330,1765 330,1800" fill="none" stroke="#475569" stroke-width="3" marker-end="url(#a)"/>
+<polyline points="330,1875 330,1910" fill="none" stroke="#475569" stroke-width="3" marker-end="url(#a)"/>
+<polyline points="580,1838 710,1838 710,1728 920,1728" fill="none" stroke="#475569" stroke-width="3" stroke-dasharray="9 9" marker-end="url(#a)"/>
+<polyline points="580,1838 710,1838 710,2388 920,2388" fill="none" stroke="#475569" stroke-width="3" marker-end="url(#a)"/>
+<polyline points="330,1985 330,2020" fill="none" stroke="#475569" stroke-width="3" marker-end="url(#a)"/>
+<polyline points="330,2095 330,2130" fill="none" stroke="#475569" stroke-width="3" marker-end="url(#a)"/>
+<polyline points="330,2205 330,2240" fill="none" stroke="#475569" stroke-width="3" marker-end="url(#a)"/>
+<polyline points="330,2315 330,2350" fill="none" stroke="#475569" stroke-width="3" marker-end="url(#a)"/>
+<polyline points="580,2278 810,2278 810,1728 920,1728" fill="none" stroke="#475569" stroke-width="3" stroke-dasharray="9 9" marker-end="url(#a)"/>
+<polyline points="580,2278 810,2278 810,2388 920,2388" fill="none" stroke="#475569" stroke-width="3" marker-end="url(#a)"/>
+<polyline points="330,2425 330,2460" fill="none" stroke="#475569" stroke-width="3" marker-end="url(#a)"/>
+<polyline points="330,2535 330,2570" fill="none" stroke="#475569" stroke-width="3" marker-end="url(#a)"/>
+<polyline points="580,2608 710,2608 710,2388 920,2388" fill="none" stroke="#475569" stroke-width="3" marker-end="url(#a)"/>
+<rect x="80" y="40" width="500" height="75" rx="12" fill="#2563eb"/>
+<text x="244.5" y="82.62" font-family="Arial,sans-serif" font-size="24" font-weight="700" fill="white">LINE Webhook</text>
+<rect x="80" y="150" width="500" height="75" rx="12" fill="#2563eb"/>
+<text x="188.0" y="192.62" font-family="Arial,sans-serif" font-size="24" font-weight="700" fill="white">Compute LINE Signature</text>
+<rect x="80" y="260" width="500" height="75" rx="12" fill="#2563eb"/>
+<text x="234.5078125" y="302.62" font-family="Arial,sans-serif" font-size="24" font-weight="700" fill="white">Signature Valid?</text>
+<rect x="80" y="370" width="500" height="75" rx="12" fill="#2563eb"/>
+<text x="230.0" y="412.62" font-family="Arial,sans-serif" font-size="24" font-weight="700" fill="white">Split LINE Events</text>
+<rect x="80" y="480" width="500" height="75" rx="12" fill="#2563eb"/>
+<text x="211.5" y="522.62" font-family="Arial,sans-serif" font-size="24" font-weight="700" fill="white">Keep User Messages</text>
+<rect x="80" y="590" width="500" height="75" rx="12" fill="#2563eb"/>
+<text x="221.0" y="632.62" font-family="Arial,sans-serif" font-size="24" font-weight="700" fill="white">Is Image Message?</text>
+<rect x="80" y="700" width="500" height="75" rx="12" fill="#2563eb"/>
+<text x="208.0" y="742.62" font-family="Arial,sans-serif" font-size="24" font-weight="700" fill="white">Download Slip Image</text>
+<rect x="80" y="810" width="500" height="75" rx="12" fill="#2563eb"/>
+<text x="188.0" y="852.62" font-family="Arial,sans-serif" font-size="24" font-weight="700" fill="white">Compute Image SHA-256</text>
+<rect x="80" y="920" width="500" height="75" rx="12" fill="#2563eb"/>
+<text x="185.0078125" y="962.62" font-family="Arial,sans-serif" font-size="24" font-weight="700" fill="white">Read Transaction History</text>
+<rect x="80" y="1030" width="500" height="75" rx="12" fill="#2563eb"/>
+<text x="199.0" y="1072.62" font-family="Arial,sans-serif" font-size="24" font-weight="700" fill="white">Check Duplicate Image</text>
+<rect x="80" y="1140" width="500" height="75" rx="12" fill="#2563eb"/>
+<text x="217.0" y="1182.62" font-family="Arial,sans-serif" font-size="24" font-weight="700" fill="white">Is Duplicate Image?</text>
+<rect x="80" y="1250" width="500" height="75" rx="12" fill="#2563eb"/>
+<text x="189.0" y="1292.62" font-family="Arial,sans-serif" font-size="24" font-weight="700" fill="white">Read Bank Slip (AI OCR)</text>
+<rect x="80" y="1360" width="500" height="75" rx="12" fill="#2563eb"/>
+<text x="243.0" y="1402.62" font-family="Arial,sans-serif" font-size="24" font-weight="700" fill="white">Parse Slip Data</text>
+<rect x="80" y="1470" width="500" height="75" rx="12" fill="#2563eb"/>
+<text x="230.0" y="1512.62" font-family="Arial,sans-serif" font-size="24" font-weight="700" fill="white">Route Slip Result</text>
+<rect x="80" y="1580" width="500" height="75" rx="12" fill="#2563eb"/>
+<text x="227.5" y="1622.62" font-family="Arial,sans-serif" font-size="24" font-weight="700" fill="white">Read Student List</text>
+<rect x="80" y="1690" width="500" height="75" rx="12" fill="#2563eb"/>
+<text x="247.0" y="1732.62" font-family="Arial,sans-serif" font-size="24" font-weight="700" fill="white">Match Student</text>
+<rect x="80" y="1800" width="500" height="75" rx="12" fill="#2563eb"/>
+<text x="225.5" y="1842.62" font-family="Arial,sans-serif" font-size="24" font-weight="700" fill="white">Student Matched?</text>
+<rect x="80" y="1910" width="500" height="75" rx="12" fill="#2563eb"/>
+<text x="191.0" y="1952.62" font-family="Arial,sans-serif" font-size="24" font-weight="700" fill="white">Choose Payment Round</text>
+<rect x="80" y="2020" width="500" height="75" rx="12" fill="#2563eb"/>
+<text x="223.0" y="2062.62" font-family="Arial,sans-serif" font-size="24" font-weight="700" fill="white">Read Round Sheet</text>
+<rect x="80" y="2130" width="500" height="75" rx="12" fill="#2563eb"/>
+<text x="197.5" y="2172.62" font-family="Arial,sans-serif" font-size="24" font-weight="700" fill="white">Confirm Round Record</text>
+<rect x="80" y="2240" width="500" height="75" rx="12" fill="#2563eb"/>
+<text x="224.015625" y="2282.62" font-family="Arial,sans-serif" font-size="24" font-weight="700" fill="white">Ready To Record?</text>
+<rect x="80" y="2350" width="500" height="75" rx="12" fill="#15803d"/>
+<text x="196.5" y="2392.62" font-family="Arial,sans-serif" font-size="24" font-weight="700" fill="white">Update Payment Status</text>
+<rect x="80" y="2460" width="500" height="75" rx="12" fill="#15803d"/>
+<text x="236.0078125" y="2502.62" font-family="Arial,sans-serif" font-size="24" font-weight="700" fill="white">Log Transaction</text>
+<rect x="80" y="2570" width="500" height="75" rx="12" fill="#15803d"/>
+<text x="149.0" y="2612.62" font-family="Arial,sans-serif" font-size="24" font-weight="700" fill="white">Restore Payment Reply Context</text>
+<rect x="920" y="260" width="500" height="75" rx="12" fill="#c2410c"/>
+<text x="1033.5" y="302.62" font-family="Arial,sans-serif" font-size="24" font-weight="700" fill="white">Reject Invalid Signature</text>
+<rect x="920" y="1690" width="500" height="75" rx="12" fill="#c2410c"/>
+<text x="1032.5" y="1732.62" font-family="Arial,sans-serif" font-size="24" font-weight="700" fill="white">Flag For Manual Review</text>
+<rect x="920" y="2350" width="500" height="75" rx="12" fill="#15803d"/>
+<text x="1026.0" y="2392.62" font-family="Arial,sans-serif" font-size="24" font-weight="700" fill="white">Compose Reply Message</text>
+<rect x="920" y="2505" width="500" height="75" rx="12" fill="#15803d"/>
+<text x="1106.5" y="2547.62" font-family="Arial,sans-serif" font-size="24" font-weight="700" fill="white">LINE Reply</text>
+</svg>
