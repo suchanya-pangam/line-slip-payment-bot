@@ -4,7 +4,7 @@ An n8n workflow that automates department fee tracking through LINE. It reads pa
 
 ![Workflow overview](assets/workflow-overview.png)
 
-I built this as the department **treasurer** to replace manual slip checking, where each slip had to be opened, read, matched to a student, and recorded by hand.
+I built this as the department **treasurer.** I used it to re-check past payment slips against the records I had verified by hand, to confirm the ledger was complete and accurate before calculating refunds of the remaining balance.
 
 ## Problem
 
@@ -12,18 +12,18 @@ Collecting department fees through bank transfer meant reading slips in chat, ma
 
 ## How It Works
 
-| Step | What happens | n8n nodes |
-|---|---|---|
-| 1. Receive | Compares the LINE request signature with a computed HMAC | Webhook, Crypto, IF |
-| 2. Filter | Keeps message events and asks for a slip if the message is not an image | Split Out, Filter, IF |
-| 3. Fingerprint | Downloads the image and computes its hash | HTTP Request, Crypto |
-| 4. Duplicate check | Checks the image hash against transaction history | Google Sheets, Code, IF |
-| 5. Read slip | Extracts slip fields and checks the required values | OpenAI, Code, Switch |
-| 6. Match student | Accepts one exact name match or one first-name and surname-prefix match | Google Sheets, Code, IF |
-| 7. Check round | Uses the transfer date to select a round; checks the unpaid student row and amount due | Code, Google Sheets, IF |
-| 8. Record | Updates the payment row and appends transaction history | Google Sheets, Code |
-| 9. Review | Queues unmatched students and failed round checks; asks for a new image when a slip is unreadable | Google Sheets, Code |
-| 10. Reply | Sends a confirmation, retry request, or review message in Thai | Code, HTTP Request |
+| Step               | What happens                                                                                      | n8n nodes               |
+| ------------------ | ------------------------------------------------------------------------------------------------- | ----------------------- |
+| 1. Receive         | Compares the LINE request signature with a computed HMAC                                          | Webhook, Crypto, IF     |
+| 2. Filter          | Keeps message events and asks for a slip if the message is not an image                           | Split Out, Filter, IF   |
+| 3. Fingerprint     | Downloads the image and computes its hash                                                         | HTTP Request, Crypto    |
+| 4. Duplicate check | Checks the image hash against transaction history                                                 | Google Sheets, Code, IF |
+| 5. Read slip       | Extracts slip fields and checks the required values                                               | OpenAI, Code, Switch    |
+| 6. Match student   | Accepts one exact name match or one first-name and surname-prefix match                           | Google Sheets, Code, IF |
+| 7. Check round     | Uses the transfer date to select a round; checks the unpaid student row and amount due            | Code, Google Sheets, IF |
+| 8. Record          | Updates the payment row and appends transaction history                                           | Google Sheets, Code     |
+| 9. Review          | Queues unmatched students and failed round checks; asks for a new image when a slip is unreadable | Google Sheets, Code     |
+| 10. Reply          | Sends a confirmation, retry request, or review message in Thai                                    | Code, HTTP Request      |
 
 ## Workflow Screenshots
 
@@ -59,4 +59,4 @@ Student records and real payment slips are excluded. The workflow uses placehold
 
 - Reads data from the slip image only; it does not verify the transfer with the bank.
 - Image-hash duplicate detection does not catch edited or re-exported slips.
-- Built and tested as a prototype; live end-to-end testing with LINE, OpenAI and Google Sheets requires your own credentials.
+- Used for retrospective verification of past slips by the treasurer; it has not been opened to students for live submissions.
